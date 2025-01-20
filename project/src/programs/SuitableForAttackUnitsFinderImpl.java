@@ -6,32 +6,29 @@ import com.battle.heroes.army.programs.SuitableForAttackUnitsFinder;
 import java.util.ArrayList;
 import java.util.List;
 
-
-
 public class SuitableForAttackUnitsFinderImpl implements SuitableForAttackUnitsFinder {
+    private static final int NUM_COLUMNS = 3;
+
     @Override
     public List<Unit> getSuitableUnits(List<List<Unit>> unitsByRow, boolean isLeftArmyTarget) {
         List<Unit> suitableUnits = new ArrayList<>();
-        int numRows = unitsByRow.size();
-        if (numRows == 0) {
-            return suitableUnits;
-        }
 
-        int numColumns = unitsByRow.get(0).size();
+        for (List<Unit> row : unitsByRow) {
+            int rowSize = row.size();
+            if (rowSize == 0) continue;
 
-        if (isLeftArmyTarget) {
-            for (int col = 0; col < numColumns; col++) {
-                for (int row = 0; row < numRows; row++) {
-                    if (col < unitsByRow.get(row).size()) {
-                        suitableUnits.add(unitsByRow.get(row).get(col));
+            if (isLeftArmyTarget) {
+                for (int col = 0; col < NUM_COLUMNS && col < rowSize; col++) {
+                    Unit unit = row.get(col);
+                    if (unit != null) {
+                        suitableUnits.add(unit);
                     }
                 }
-            }
-        } else {
-            for (int col = numColumns - 1; col >= 0; col--) {
-                for (int row = 0; row < numRows; row++) {
-                    if (col < unitsByRow.get(row).size()) {
-                        suitableUnits.add(unitsByRow.get(row).get(col));
+            } else {
+                for (int col = rowSize - 1; col >= Math.max(rowSize - NUM_COLUMNS, 0); col--) {
+                    Unit unit = row.get(col);
+                    if (unit != null) {
+                        suitableUnits.add(unit);
                     }
                 }
             }
@@ -40,5 +37,3 @@ public class SuitableForAttackUnitsFinderImpl implements SuitableForAttackUnitsF
         return suitableUnits;
     }
 }
-
-

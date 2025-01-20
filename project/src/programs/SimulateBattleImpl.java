@@ -3,49 +3,50 @@ package programs;
 import com.battle.heroes.army.Army;
 import com.battle.heroes.army.Unit;
 import com.battle.heroes.army.programs.PrintBattleLog;
-
 import com.battle.heroes.army.programs.SimulateBattle;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 
 public class SimulateBattleImpl implements SimulateBattle {
     private PrintBattleLog printBattleLog;
 
     @Override
-    public void simulate(Army leftArmy, Army rightArmy) {
+    public void simulate(Army playerArmy, Army computerArmy) {
         try {
-            List<Unit> userUnits = rightArmy.getUnits();
-            List<Unit> computerUnits = leftArmy.getUnits();
+            List<Unit> playerUnits = new ArrayList<>(playerArmy.getUnits());
+            List<Unit> computerUnits = new ArrayList<>(computerArmy.getUnits());
+
+            while (hasAliveUnits(playerUnits) && hasAliveUnits(computerUnits)) {
     
-            int userIndex = 0, computerIndex = 0;
-    
-            while (userIndex < userUnits.size() && computerIndex < computerUnits.size()) {
-                Unit userUnit = userUnits.get(userIndex);
-                Unit computerUnit = computerUnits.get(computerIndex);
-    
-                if (userUnit.isAlive()) {
-                    userUnit.getProgram().attack();
-                    printBattleLog.printBattleLog(userUnit, computerUnit);
+                List<Unit> allUnits = new ArrayList<>();
+                allUnits.addAll(playerUnits);
+                allUnits.addAll(computerUnits);
+                allUnits.removeIf(unit -> !unit.isAlive());
+                allUnits.sort(Comparator.comparingInt(Unit::getBaseAttack).reversed());
+
+                Queue<Unit> attackQueue = new LinkedList<>(allUnits);
+
+                while (!attackQueue.isEmpty()) {
+                    Unit attacker = attackQueue.poll();
+
+                    if (!attacker.isAlive()) continue;
+
+                    Unit target = attacker.getProgram().attack(); 
+                    if (target != null && target.isAlive()) {
+                        printBattleLog.printBattleLog(attacker, target);
+                    }
                 }
-    
-                if (computerUnit.isAlive()) {
-                    computerUnit.getProgram().attack();
-                    printBattleLog.printBattleLog(userUnit, computerUnit);
-                }
-    
-                if (!userUnit.isAlive()) userIndex++;
-                if (!computerUnit.isAlive()) computerIndex++;
             }
-    
-            if (userIndex >= userUnits.size() && computerIndex >= computerUnits.size()) {
-                System.out.println("Battle ended in a draw.");
-            } else if (userIndex >= userUnits.size()) {
-                System.out.println("Computer army wins!");
-            } else {
-                System.out.println("User army wins!");
-            }
-        } catch (InterruptedException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private boolean hasAliveUnits(List<Unit> units) {
+        return units.stream().anyMatch(Unit::isAlive);
     }
 }
